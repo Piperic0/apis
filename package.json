@@ -15,5 +15,14 @@
     "express": "^5.1.0",
     "mysql2": "^3.14.0",
     "pg": "^8.14.1"
-  }
+  },
+  "devDependencies": {},
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Piperic0/apis.git"
+  },
+  "bugs": {
+    "url": "https://github.com/Piperic0/apis/issues"
+  },
+  "homepage": "https://github.com/Piperic0/apis#readme"
 }

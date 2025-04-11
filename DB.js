@@ -1,16 +1,12 @@
-const { Client } = require('pg');
+const { Pool } = require('pg');
 
-const client = new Client({
+const pool = new Pool({
   host: 'aws-0-us-east-1.pooler.supabase.com',
-  port: 5432,
   user: 'postgres.easbqcmaeuociirekwxw',
-  password: 'gKE63kRUQfrY70yI',
+  password: 'o7zQOi6KWQ2FtDvO',
   database: 'postgres',
-  ssl: { rejectUnauthorized: false } // necesario para Supabase
+  port: 5432,
+  ssl: { rejectUnauthorized: false } // Esto es importante para conexión segura en Supabase
 });
 
-client.connect()
-  .then(() => console.log('Conectado'))
-  .catch(err => console.error('Error en la conexión:', err.message));
-
-module.exports = client;
+module.exports = pool;

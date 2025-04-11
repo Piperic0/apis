@@ -1,121 +1,154 @@
 const express = require('express');
-const client = require('./db');
 const cors = require('cors');
+const pool = require('./db');
 
 const app = express();
 const PORT = 3000;
-// Arranque del servidor
-app.listen(PORT, () => {
-    console.log(`Servidor corriendo en puerto ${PORT}`);
-  });
 
-// Middlewares
 app.use(cors());
 app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
 
-// Ruta de prueba
-app.get('/api/prueba', (req, res) => {
-  res.status(200).json({
-    message: 'LA API FUNCIONA CORRECTAMENTE',
-    port: PORT,
-    status: 'success'
+// -------------------- PERSONAS --------------------
+
+// GET todas las personas
+app.get('/personas', (req, res) => {
+  pool.query('SELECT * FROM Persona', (err, result) => {
+    if (err) {
+      res.status(500).json({ error: err.message });
+    } else {
+      res.json(result.rows);
+    }
   });
 });
 
-// Ruta para guardar
-app.post('/api/guardar', async (req, res) => {
-  const { cedula, nombre, edad, profesion } = req.body;
-  const query = `INSERT INTO personas (cedula, nombre, edad, profesion)VALUES ($1, $2, $3, $4)`; 
-
-  try {
-    await client.query(query, [cedula, nombre, edad, profesion]);
-    res.status(201).json({ cedula, nombre, edad, profesion });
-  } catch (error) {
-    res.status(500).json({
-      message: 'ERROR CREANDO USUARIO',
-      error: error.message
-    });
-  }
-});
-
-// Obtener todos los registros
-app.get('/api/obtener', async (req, res) => {
-  try {
-    const result = await client.query('SELECT * FROM personas');
-    res.status(200).json({
-      success: true,
-      message: "Datos de la tabla",
-      data: result.rows
-    });
-  } catch (error) {
-    res.status(500).json({
-      success: false,
-      message: "Error al recuperar los datos",
-      details: error.message
-    });
-  }
-});
-
-// Eliminar por cédula
-app.delete('/api/eliminar/:cedula', async (req, res) => {
-  const { cedula } = req.params;
-  const query = 'DELETE FROM personas WHERE cedula = $1';
-
-  try {
-    const result = await client.query(query, [cedula]);
-    
-    if (result.rowCount === 0) {
-      res.status(404).json({
-        success: false,
-        message: No `existe el registro con la cédula ${cedula}`
-      });
+// GET una persona por id
+app.get('/personas/:id', (req, res) => {
+  const id = req.params.id;
+  pool.query('SELECT * FROM Persona WHERE id = $1', [id], (err, result) => {
+    if (err) {
+      res.status(500).json({ error: err.message });
     } else {
-      res.status(200).json({
-        success: true,
-        message: "Dato eliminado de la tabla",
-        data: result
-      });
+      res.json(result.rows[0]);
     }
-  } catch (error) {
-    res.status(500).json({
-      success: false,
-      message: "Error al eliminar registro",
-      error: error.message
-    });
-  }
+  });
 });
 
-app.put('/api/actualizar/:cedula', async (req, res) => {
-  const { cedula } = req.params;
-  const { nombre, edad, profesion } = req.body;
-
-  const query = `
-    UPDATE personas
-    SET nombre = $1, edad = $2, profesion = $3
-    WHERE cedula = $4
-  `;
-
-  try {
-    const result = await client.query(query, [nombre, edad, profesion, cedula]);
-
-    if (result.rowCount === 0) {
-      return res.status(404).json({
-        success: false,
-        message: `No se encontró persona con la cédula ${cedula}`
-      });
+// POST crear persona
+app.post('/personas', (req, res) => {
+  const { id, Nombre, Apellido1, Apellido2, DNI } = req.body;
+  pool.query(
+    'INSERT INTO Persona (id, Nombre, Apellido1, Apellido2, DNI) VALUES ($1, $2, $3, $4, $5)',
+    [id, Nombre, Apellido1, Apellido2, DNI],
+    (err, result) => {
+      if (err) {
+        res.status(500).json({ error: err.message });
+      } else {
+        res.send('Persona creada');
+      }
     }
+  );
+});
 
-    res.status(200).json({
-      success: true,
-      message: 'Datos actualizados correctamente',
-      data: { cedula, nombre, edad, profesion }
-    });
-  } catch (error) {
-    res.status(500).json({
-      success: false,
-      message: 'Error al actualizar',
-      error: error.message
-    });
-  }
+// PUT actualizar persona
+app.put('/personas/:id', (req, res) => {
+  const id = req.params.id;
+  const { Nombre, Apellido1, Apellido2, DNI } = req.body;
+  pool.query(
+    'UPDATE Persona SET Nombre = $1, Apellido1 = $2, Apellido2 = $3, DNI = $4 WHERE id = $5',
+    [Nombre, Apellido1, Apellido2, DNI, id],
+    (err, result) => {
+      if (err) {
+        res.status(500).json({ error: err.message });
+      } else {
+        res.send('Persona actualizada');
+      }
+    }
+  );
+});
+
+// DELETE eliminar persona
+app.delete('/personas/:id', (req, res) => {
+  const id = req.params.id;
+  pool.query('DELETE FROM Persona WHERE id = $1', [id], (err, result) => {
+    if (err) {
+      res.status(500).json({ error: err.message });
+    } else {
+      res.send('Persona eliminada');
+    }
+  });
+});
+
+// -------------------- COCHES --------------------
+
+// GET todos los coches
+app.get('/coches', (req, res) => {
+  pool.query('SELECT * FROM Coche', (err, result) => {
+    if (err) {
+      res.status(500).json({ error: err.message });
+    } else {
+      res.json(result.rows);
+    }
+  });
+});
+
+// GET coche por matrícula
+app.get('/coches/:matricula', (req, res) => {
+  const matricula = req.params.matricula;
+  pool.query('SELECT * FROM Coche WHERE Matricula = $1', [matricula], (err, result) => {
+    if (err) {
+      res.status(500).json({ error: err.message });
+    } else {
+      res.json(result.rows[0]);
+    }
+  });
+});
+
+// POST crear coche
+app.post('/coches', (req, res) => {
+  const { Matricula, Marca, Modelo, Caballos, Persona_id } = req.body;
+  pool.query(
+    'INSERT INTO Coche (Matricula, Marca, Modelo, Caballos, Persona_id) VALUES ($1, $2, $3, $4, $5)',
+    [Matricula, Marca, Modelo, Caballos, Persona_id],
+    (err, result) => {
+      if (err) {
+        res.status(500).json({ error: err.message });
+      } else {
+        res.send('Coche creado');
+      }
+    }
+  );
+});
+
+// PUT actualizar coche
+app.put('/coches/:matricula', (req, res) => {
+  const matricula = req.params.matricula;
+  const { Marca, Modelo, Caballos, Persona_id } = req.body;
+  pool.query(
+    'UPDATE Coche SET Marca = $1, Modelo = $2, Caballos = $3, Persona_id = $4 WHERE Matricula = $5',
+    [Marca, Modelo, Caballos, Persona_id, matricula],
+    (err, result) => {
+      if (err) {
+        res.status(500).json({ error: err.message });
+      } else {
+        res.send('Coche actualizado');
+      }
+    }
+  );
+});
+
+// DELETE eliminar coche
+app.delete('/coches/:matricula', (req, res) => {
+  const matricula = req.params.matricula;
+  pool.query('DELETE FROM Coche WHERE Matricula = $1', [matricula], (err, result) => {
+    if (err) {
+      res.status(500).json({ error: err.message });
+    } else {
+      res.send('Coche eliminado');
+    }
+  });
+});
+
+// -------------------- PRUEBA DE INICIO --------------------
+app.listen(PORT, () => {
+  console.log(`Servidor corriendo `);
 });
